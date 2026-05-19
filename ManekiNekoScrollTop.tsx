@@ -1,33 +1,47 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 
+type ManekiNekoScrollTopProps = {
+  enableScrollToTop: boolean
+  showButton: boolean
+  size: number
+  textColor: string
+  textSize: number
+  buttonText: string
+  fontFamily: string
+  buttonMarginTop: number
+  backgroundColor: string
+  ariaLabel: string
+}
+
 /**
+ * Marketplace-ready component ownership notes:
+ * - Self-contained SVG and animation (no external dependencies)
+ * - No global CSS selectors
+ * - Safe browser guard around window usage
+ *
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 180
  * @framerIntrinsicHeight 180
  */
-export function ManekiNekoScrollTop(props) {
+export function ManekiNekoScrollTop(props: Partial<ManekiNekoScrollTopProps>) {
   const {
-    enableScrollToTop,
-    size,
-    textColor,
-    textSize,
-    buttonText,
-    fontFamily,
-    buttonMarginTop,
-    backgroundColor,
-    showButton,
+    enableScrollToTop = true,
+    showButton = true,
+    size = 85,
+    textColor = "#ffffff",
+    textSize = 14,
+    buttonText = "SCROLL TO TOP",
+    fontFamily = "Arial, sans-serif",
+    buttonMarginTop = 16,
+    backgroundColor = "transparent",
+    ariaLabel = "Maneki Neko scroll to top",
   } = props
-
-  const pawAnimationName = React.useMemo(
-    () => `paw-wave-${Math.random().toString(36).slice(2, 9)}`,
-    []
-  )
 
   const handleClick = React.useCallback(() => {
     if (!enableScrollToTop) return
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
   }, [enableScrollToTop])
@@ -46,14 +60,6 @@ export function ManekiNekoScrollTop(props) {
         backgroundColor,
       }}
     >
-      <style>{`
-        @keyframes ${pawAnimationName} {
-          0% { transform: rotate(0deg); }
-          50% { transform: rotate(25deg); }
-          100% { transform: rotate(0deg); }
-        }
-      `}</style>
-
       <svg
         viewBox="0 0 180 180"
         width={size}
@@ -61,7 +67,7 @@ export function ManekiNekoScrollTop(props) {
         style={{ display: "block", flexShrink: 0 }}
         xmlns="http://www.w3.org/2000/svg"
         role="img"
-        aria-label="Maneki neko lucky cat"
+        aria-label={ariaLabel}
       >
         <ellipse cx="90" cy="125" rx="45" ry="35" fill="#ffffff" stroke="#000" strokeWidth="3" />
         <circle cx="90" cy="75" r="40" fill="#ffffff" stroke="#000" strokeWidth="3" />
@@ -80,25 +86,26 @@ export function ManekiNekoScrollTop(props) {
         <text x="90" y="142" fontSize="14" textAnchor="middle" fill="#000" fontFamily="Arial">
           福
         </text>
-        <ellipse
-          cx="144"
-          cy="100"
-          rx="14"
-          ry="20"
-          fill="#ffffff"
-          stroke="#000"
-          strokeWidth="3"
-          style={{
-            transformOrigin: "144px 100px",
-            animation: `${pawAnimationName} 1.1s ease-in-out infinite`,
-          }}
-        />
+        <ellipse cx="144" cy="100" rx="14" ry="20" fill="#ffffff" stroke="#000" strokeWidth="3">
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            values="0 144 100;25 144 100;0 144 100"
+            dur="1.1s"
+            repeatCount="indefinite"
+            calcMode="spline"
+            keyTimes="0;0.5;1"
+            keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+          />
+        </ellipse>
       </svg>
 
       {showButton && (
         <button
           type="button"
           onClick={handleClick}
+          disabled={!enableScrollToTop}
+          aria-label={buttonText}
           style={{
             marginTop: buttonMarginTop,
             fontFamily,
@@ -109,12 +116,11 @@ export function ManekiNekoScrollTop(props) {
             background: "none",
             border: "none",
             padding: 0,
-            cursor: enableScrollToTop ? "pointer" : "default",
+            cursor: enableScrollToTop ? "pointer" : "not-allowed",
             userSelect: "none",
             WebkitTapHighlightColor: "transparent",
             opacity: enableScrollToTop ? 1 : 0.45,
           }}
-          aria-disabled={!enableScrollToTop}
           title={enableScrollToTop ? "Scroll to top" : "Scroll to top disabled"}
         >
           {buttonText}
@@ -126,6 +132,7 @@ export function ManekiNekoScrollTop(props) {
 
 ManekiNekoScrollTop.defaultProps = {
   enableScrollToTop: true,
+  showButton: true,
   size: 85,
   textColor: "#ffffff",
   textSize: 14,
@@ -133,7 +140,7 @@ ManekiNekoScrollTop.defaultProps = {
   fontFamily: "Arial, sans-serif",
   buttonMarginTop: 16,
   backgroundColor: "transparent",
-  showButton: true,
+  ariaLabel: "Maneki Neko scroll to top",
 }
 
 addPropertyControls(ManekiNekoScrollTop, {
@@ -149,6 +156,8 @@ addPropertyControls(ManekiNekoScrollTop, {
     type: ControlType.Boolean,
     defaultValue: true,
     title: "Show Button",
+    enabledTitle: "Show",
+    disabledTitle: "Hide",
   },
   enableScrollToTop: {
     type: ControlType.Boolean,
@@ -195,5 +204,10 @@ addPropertyControls(ManekiNekoScrollTop, {
     type: ControlType.Color,
     defaultValue: "transparent",
     title: "Background",
+  },
+  ariaLabel: {
+    type: ControlType.String,
+    defaultValue: "Maneki Neko scroll to top",
+    title: "A11y Label",
   },
 })
